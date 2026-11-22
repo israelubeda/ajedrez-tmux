@@ -28,12 +28,32 @@ PIEZAS = {
     "P": "♙", "N": "♘", "B": "♗", "R": "♖", "Q": "♕", "K": "♔",
     "p": "♟", "n": "♞", "b": "♝", "r": "♜", "q": "♛", "k": "♚",
 }
+CLARA = "#D9C7A5"
+OSCURA = "#657E65"
+ORIGEN = "#D49A48"
+DESTINO = "#E5C85B"
+PIEZA_BLANCA = "#FFFFFF"
+PIEZA_NEGRA = "#151A24"
+COORDENADAS = "#50D5ED"
+RESET = "\033[0m"
 LETRAS = str.maketrans({"R": "K", "D": "Q", "T": "R", "A": "B", "C": "N"})
 INVERSAS = str.maketrans({"K": "R", "Q": "D", "R": "T", "B": "A", "N": "C"})
 
 
 def pintar(texto: str, hex_color: str, activo: bool = True, *, fuerte: bool = False) -> str:
     return color_hex(texto, hex_color, negrita=fuerte) if activo else texto
+
+
+def prefijo_color(hex_color: str, fondo: bool = False) -> str:
+    """Obtiene un prefijo ANSI usando color-latam, como el lector PGN de referencia."""
+    marcador = "__CASILLA__"
+    return color_hex(marcador, hex_color, fondo=fondo).split(marcador, 1)[0]
+
+
+def casilla(texto: str, fondo: str, frente: str, colores: bool) -> str:
+    if not colores:
+        return texto
+    return prefijo_color(fondo, fondo=True) + prefijo_color(frente) + texto + RESET
 
 
 def san_es(san: str) -> str:
@@ -63,24 +83,27 @@ def leer_jugada(tablero: chess.Board, texto: str) -> chess.Move:
 def tablero_texto(tablero: chess.Board, blancas_abajo: bool, colores: bool, ascii_: bool) -> str:
     columnas = range(8) if blancas_abajo else range(7, -1, -1)
     filas = range(7, -1, -1) if blancas_abajo else range(8)
-    etiqueta = "  " + " ".join("abcdefgh"[i] for i in columnas)
-    lineas = [pintar(etiqueta, "#8ca4b8", colores)]
+    etiqueta = "    " + "  ".join("ABCDEFGH"[i] for i in columnas)
+    lineas = [pintar(etiqueta, COORDENADAS, colores, fuerte=True)]
     ultima = tablero.peek() if tablero.move_stack else None
     for fila in filas:
         casillas = []
         for columna in columnas:
             sq = chess.square(columna, fila)
             pieza = tablero.piece_at(sq)
-            glifo = pieza.symbol() if ascii_ and pieza else PIEZAS[pieza.symbol()] if pieza else "·"
-            fondo = (fila + columna) % 2 == 0
-            tono = "#f2d6a2" if fondo else "#8198a8"
-            if ultima and sq in (ultima.from_square, ultima.to_square):
-                tono = "#f6c65d"
-            if pieza:
-                tono = "#fffaf0" if pieza.color == chess.WHITE else "#173047"
-            casillas.append(pintar(glifo, tono, colores, fuerte=bool(pieza)))
-        lineas.append(pintar(str(fila + 1), "#8ca4b8", colores) + " " + " ".join(casillas) + " " + pintar(str(fila + 1), "#8ca4b8", colores))
-    lineas.append(pintar(etiqueta, "#8ca4b8", colores))
+            glifo = pieza.symbol() if ascii_ and pieza else PIEZAS[pieza.symbol()] if pieza else " "
+            if not colores and not pieza:
+                glifo = "·" if (fila + columna) % 2 else " "
+            fondo = CLARA if (fila + columna) % 2 else OSCURA
+            if ultima and sq == ultima.from_square:
+                fondo = ORIGEN
+            elif ultima and sq == ultima.to_square:
+                fondo = DESTINO
+            frente = PIEZA_BLANCA if pieza is None or pieza.color == chess.WHITE else PIEZA_NEGRA
+            casillas.append(casilla(f" {glifo} ", fondo, frente, colores))
+        numero = pintar(str(fila + 1), COORDENADAS, colores, fuerte=True)
+        lineas.append(f" {numero}  " + "".join(casillas) + f"  {numero}")
+    lineas.append(pintar(etiqueta, COORDENADAS, colores, fuerte=True))
     return "\n".join(lineas)
 
 
@@ -228,6 +251,8 @@ def jugar(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Ajedrez bonito para Termux y tmux")
     parser.add_argument("--rival", type=int, choices=range(1, 6), metavar="1-5", help="Selecciona uno de los cinco rivales")
     parser.add_argument("--color", choices=("blancas", "negras"), default="blancas", help="Color de tus piezas")

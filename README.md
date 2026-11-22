@@ -40,6 +40,10 @@ Usa `ayuda`, `deshacer`, `guardar` y `salir` en el mismo campo de entrada. Las p
 
 Los colores se generan con [color-latam](https://pypi.org/project/color-latam/). Si tu terminal no muestra bien las piezas, ejecuta `python ajedrez.py --ascii`; para desactivar colores usa `--sin-color` o `NO_COLOR=1`.
 
+El tablero usa casillas coloreadas, coordenadas grandes y resaltado separado para
+origen y destino, adaptados del diseño de
+[lector-pgn-terminal](https://github.com/israelubeda/lector-pgn-terminal).
+
 ## Requisitos
 
 - Python 3.10 o posterior
