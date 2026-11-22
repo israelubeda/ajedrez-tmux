@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest-tmp/
+.pytest_cache/
+partidas/
