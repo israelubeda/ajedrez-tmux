@@ -47,3 +47,9 @@ Los colores se generan con [color-latam](https://pypi.org/project/color-latam/).
 - Dependencias Python de `requirements.txt`
 
 Stockfish es software libre bajo GPLv3. Este repositorio no incluye el binario de Stockfish.
+
+## Licencia
+
+El código propio de este repositorio se distribuye bajo [MIT](LICENSE). El código
+interno de registro es `IU-OSS-0001`; consulta [LICENSE_ID.txt](LICENSE_ID.txt).
+Las dependencias y Stockfish conservan sus licencias respectivas.
